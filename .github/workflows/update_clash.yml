@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:  # 新增权限配置
+      contents: write  # 允许写入仓库
 
     steps:
     - name: Checkout code
