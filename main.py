@@ -10,7 +10,7 @@ print("      H͜͡E͜͡L͜͡L͜͡O͜͡ ͜͡W͜͡O͜͡R͜͡L͜͡D͜͡ ͜͡E͜͡X�
 print("𓆝 𓆟 𓆞 𓆟 𓆝 𓆟 𓆞 𓆟 𓆝 𓆟 𓆞 𓆟")
 print("Author : 𝐼𝑢")
 print(f"Date   : {datetime.today().strftime('%Y-%m-%d')}")
-print("Version: 1.0")
+print("Version: 1.0 (Clash版)")
 print("𓆝 𓆟 𓆞 𓆟 𓆝 𓆟 𓆞 𓆟 𓆝 𓆟 𓆞 𓆟")
 print("𝐼𝑢:")
 print(r"""
@@ -31,8 +31,9 @@ print(r"""
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠑⢒⠁⠀⠀⠀⠀⠀⠀⠀
 """)
 
-a = 'http://api.skrapp.net/api/serverlist'
-b = {
+# API配置（保持不变）
+API_URL = 'http://api.skrapp.net/api/serverlist'
+HEADERS = {
     'accept': '/',
     'accept-language': 'zh-Hans-CN;q=1, en-CN;q=0.9',
     'appversion': '1.3.1',
@@ -40,56 +41,57 @@ b = {
     'content-type': 'application/x-www-form-urlencoded',
     'Cookie': 'PHPSESSID=fnffo1ivhvt0ouo6ebqn86a0d4'
 }
-c = {'data': '4265a9c353cd8624fd2bc7b5d75d2f18b1b5e66ccd37e2dfa628bcb8f73db2f14ba98bc6a1d8d0d1c7ff1ef0823b11264d0addaba2bd6a30bdefe06f4ba994ed'}
-d = b'65151f8d966bf596'
-e = b'88ca0f0ea1ecf975'
+POST_DATA = {'data': '4265a9c353cd8624fd2bc7b5d75d2f18b1b5e66ccd37e2dfa628bcb8f73db2f14ba98bc6a1d8d0d1c7ff1ef0823b11264d0addaba2bd6a30bdefe06f4ba994ed'}
+AES_KEY = b'65151f8d966bf596'
+AES_IV = b'88ca0f0ea1ecf975'
 
-def decrypt_data(g, d, e):
-    h = pyaes.AESModeOfOperationCBC(d, iv=e)
-    decrypted = b''.join(h.decrypt(g[j:j+16]) for j in range(0, len(g), 16))
-    return decrypted[:-decrypted[-1]]
+def aes_decrypt(ciphertext, key, iv):
+    """AES-256-CBC解密函数"""
+    aes = pyaes.AESModeOfOperationCBC(key, iv=iv)
+    decrypted = b''.join(aes.decrypt(ciphertext[i:i+16]) for i in range(0, len(ciphertext), 16))
+    return decrypted[:-decrypted[-1]]  # 去除PKCS7填充
 
-j = requests.post(a, headers=b, data=c)
+# 获取并解密数据
+response = requests.post(API_URL, headers=HEADERS, data=POST_DATA)
+if response.status_code == 200:
+    encrypted_data = binascii.unhexlify(response.text.strip())
+    decrypted_data = aes_decrypt(encrypted_data, AES_KEY, AES_IV)
+    nodes = json.loads(decrypted_data)
 
-if j.status_code == 200:
-    encrypted_data = j.text.strip()
-    binary_data = binascii.unhexlify(encrypted_data)
-    decrypted_data = decrypt_data(binary_data, d, e)
-    server_list = json.loads(decrypted_data)
-    
     # 构建Clash配置
     clash_config = {
         "proxies": [],
         "proxy-groups": [
             {
-                "name": "Auto",
-                "type": "url-test",
-                "proxies": [],
-                "url": "http://www.gstatic.com/generate_204",
-                "interval": 300
+                "name": "PROXY",
+                "type": "select",
+                "proxies": [node['title'] for node in nodes['data']]
             }
         ],
-        "rules": ["MATCH,Auto"]
+        "rules": [
+            "DOMAIN-SUFFIX,google.com,PROXY",
+            "DOMAIN-KEYWORD,youtube,PROXY",
+            "GEOIP,CN,DIRECT",
+            "MATCH,PROXY"
+        ]
     }
-    
-    for server in server_list['data']:
-        # 添加代理信息
+
+    # 添加节点信息
+    for node in nodes['data']:
         clash_config["proxies"].append({
-            "name": server['title'],
+            "name": node['title'],
             "type": "ss",
-            "server": server['ip'],
-            "port": server['port'],
+            "server": node['ip'],
+            "port": node['port'],
             "cipher": "aes-256-cfb",
-            "password": server['password'],
-            "udp": True  # 可选参数
+            "password": node['password'],
+            "udp": True  # 默认启用UDP
         })
-        # 将代理添加到组
-        clash_config["proxy-groups"][0]["proxies"].append(server['title'])
-    
+
     # 生成YAML文件
-    with open("clash.yaml", "w", encoding="utf-8") as f:
+    with open("clash_config.yaml", "w", encoding="utf-8") as f:
         yaml.dump(clash_config, f, allow_unicode=True, sort_keys=False)
     
-    print("Clash配置文件已生成：clash.yaml")
+    print("\n[成功] Clash配置文件已生成！")
 else:
-    print(f"请求失败，状态码：{j.status_code}")
+    print(f"\n[错误] API请求失败，状态码：{response.status_code}")
