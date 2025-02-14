@@ -1,28 +1,7 @@
 proxies:
-- name: HK, New Territories
+- name: JP, Tokyo 2
   type: ss
   server: 13.231.248.146
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: TW, Taipei
-  type: ss
-  server: 18.177.145.228
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: HK, Los Angeles
-  type: ss
-  server: 44.243.45.146
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: JP, Tokyo
-  type: ss
-  server: 52.194.186.197
   port: '443'
   cipher: aes-256-cfb
   password: amazonskr05
@@ -34,44 +13,23 @@ proxies:
   cipher: aes-256-cfb
   password: amazonskr05
   udp: true
-- name: JP, Osaka
+- name: TW, Taipei
   type: ss
-  server: 43.206.216.94
+  server: 52.195.215.236
   port: '443'
   cipher: aes-256-cfb
   password: amazonskr05
   udp: true
-- name: SG, Singapore
+- name: HK, New Territories
   type: ss
-  server: 35.77.85.254
+  server: 57.180.31.56
   port: '443'
   cipher: aes-256-cfb
   password: amazonskr05
   udp: true
 - name: US, Houston
   type: ss
-  server: 54.244.0.4
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: CA, Vancouver
-  type: ss
   server: 35.91.100.155
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: JP, Tokyo 2
-  type: ss
-  server: 13.125.199.67
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: US, Dallas 2
-  type: ss
-  server: 54.244.78.72
   port: '443'
   cipher: aes-256-cfb
   password: amazonskr05
@@ -83,22 +41,64 @@ proxies:
   cipher: aes-256-cfb
   password: amazonskr05
   udp: true
+- name: JP, Tokyo
+  type: ss
+  server: 18.177.145.228
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: CA, Vancouver
+  type: ss
+  server: 54.244.0.4
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: SG, Singapore
+  type: ss
+  server: 18.141.9.206
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: US, Dallas 2
+  type: ss
+  server: 34.220.99.193
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: JP, Osaka
+  type: ss
+  server: 13.125.187.128
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: HK, Los Angeles
+  type: ss
+  server: 44.243.110.63
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
 proxy-groups:
 - name: PROXY
   type: select
   proxies:
-  - HK, New Territories
-  - TW, Taipei
-  - HK, Los Angeles
-  - JP, Tokyo
-  - KR, Incheon
-  - JP, Osaka
-  - SG, Singapore
-  - US, Houston
-  - CA, Vancouver
   - JP, Tokyo 2
-  - US, Dallas 2
+  - KR, Incheon
+  - TW, Taipei
+  - HK, New Territories
+  - US, Houston
   - HK, Kowloon
+  - JP, Tokyo
+  - CA, Vancouver
+  - SG, Singapore
+  - US, Dallas 2
+  - JP, Osaka
+  - HK, Los Angeles
 rules:
 - DOMAIN-SUFFIX,google.com,PROXY
 - DOMAIN-KEYWORD,youtube,PROXY
