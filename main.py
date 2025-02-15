@@ -91,7 +91,12 @@ try:
         # 新增策略组配置 ################################
         'proxy-groups': [
             {
-                'name': '🚀 自动选速',
+                'name': '选择节点',
+                'type': 'select',
+                'proxies': ['🚀 自动选择', '🔀 负载均衡'] + [server['title'] for server in servers]
+            },
+            {
+                'name': '🚀 自动选择',
                 'type': 'url-test',
                 'url': 'http://www.gstatic.com/generate_204',
                 'interval': 300,
@@ -104,19 +109,14 @@ try:
                 'url': 'http://www.gstatic.com/generate_204',
                 'interval': 300,
                 'proxies': [server['title'] for server in servers]  # 包含所有节点
-            },
-            {
-                'name': '🔮 手动选择',
-                'type': 'select',
-                'proxies': ['🚀 自动选速', '🔀 负载均衡'] + [server['title'] for server in servers]
             }
         ],
         # 更新规则配置 ################################
         'rules': [
             'GEOIP,CN,DIRECT',
-            'DOMAIN-SUFFIX,google.com,🚀 自动选速',  # 指定 Google 走自动选速
+            'DOMAIN-SUFFIX,google.com,🚀 自动选择',  # 指定 Google 走自动选择
             'DOMAIN-SUFFIX,youtube.com,🔀 负载均衡', # 视频走负载均衡
-            'MATCH,🔮 手动选择'  # 默认规则
+            'MATCH,选择节点'  # 默认规则
         ]
     }
 
