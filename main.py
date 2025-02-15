@@ -88,12 +88,36 @@ try:
                 'udp': True
             } for server in servers
         ],
-        'proxy-groups': [{
-            'name': 'Proxy',
-            'type': 'select',
-            'proxies': [server['title'] for server in servers]
-        }],
-        'rules': ['GEOIP,CN,DIRECT', 'MATCH,Proxy']
+        # 新增策略组配置 ################################
+        'proxy-groups': [
+            {
+                'name': '🚀 自动选速',
+                'type': 'url-test',
+                'url': 'http://www.gstatic.com/generate_204',
+                'interval': 300,
+                'tolerance': 50,
+                'proxies': [server['title'] for server in servers]  # 自动包含所有节点
+            },
+            {
+                'name': '🔀 负载均衡',
+                'type': 'load-balance',
+                'url': 'http://www.gstatic.com/generate_204',
+                'interval': 300,
+                'proxies': [server['title'] for server in servers]  # 包含所有节点
+            },
+            {
+                'name': '🔮 手动选择',
+                'type': 'select',
+                'proxies': ['🚀 自动选速', '🔀 负载均衡'] + [server['title'] for server in servers]
+            }
+        ],
+        # 更新规则配置 ################################
+        'rules': [
+            'GEOIP,CN,DIRECT',
+            'DOMAIN-SUFFIX,google.com,🚀 自动选速',  # 指定 Google 走自动选速
+            'DOMAIN-SUFFIX,youtube.com,🔀 负载均衡', # 视频走负载均衡
+            'MATCH,🔮 手动选择'  # 默认规则
+        ]
     }
 
     # 生成YAML
