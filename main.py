@@ -116,7 +116,7 @@ try:
             'GEOIP,CN,DIRECT',
             'DOMAIN-SUFFIX,google.com,🚀 自动选择',  # 指定 Google 走自动选择
             'DOMAIN-SUFFIX,youtube.com,🔀 负载均衡', # 视频走负载均衡
-            'MATCH,选择节点'  # 默认规则
+            'MATCH,🔮 选择节点'  # 默认规则
         ]
     }
 
