@@ -1,7 +1,42 @@
 proxies:
-- name: TW, Taipei
+- name: US, Houston
   type: ss
-  server: 43.206.216.94
+  server: 34.220.99.193
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: US, Dallas 2
+  type: ss
+  server: 35.86.249.1
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: CA, Vancouver
+  type: ss
+  server: 54.244.78.72
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: SG, Singapore
+  type: ss
+  server: 54.95.50.167
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: HK, Kowloon
+  type: ss
+  server: 52.197.129.53
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: JP, Tokyo
+  type: ss
+  server: 3.112.1.164
   port: '443'
   cipher: aes-256-cfb
   password: amazonskr05
@@ -13,9 +48,30 @@ proxies:
   cipher: aes-256-cfb
   password: amazonskr05
   udp: true
-- name: US, Dallas 2
+- name: JP, Osaka
   type: ss
-  server: 52.41.168.231
+  server: 43.201.254.74
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: TW, Taipei
+  type: ss
+  server: 18.177.145.228
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: JP, Tokyo 2
+  type: ss
+  server: 43.206.216.94
+  port: '443'
+  cipher: aes-256-cfb
+  password: amazonskr05
+  udp: true
+- name: HK, Los Angeles
+  type: ss
+  server: 35.91.100.155
   port: '443'
   cipher: aes-256-cfb
   password: amazonskr05
@@ -27,117 +83,61 @@ proxies:
   cipher: aes-256-cfb
   password: amazonskr05
   udp: true
-- name: HK, Kowloon
-  type: ss
-  server: 3.112.1.164
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: CA, Vancouver
-  type: ss
-  server: 54.245.222.80
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: JP, Tokyo
-  type: ss
-  server: 52.197.129.53
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: US, Houston
-  type: ss
-  server: 35.91.100.155
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: JP, Tokyo 2
-  type: ss
-  server: 54.95.50.167
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: JP, Osaka
-  type: ss
-  server: 43.201.254.74
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: SG, Singapore
-  type: ss
-  server: 18.177.145.228
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
-- name: HK, Los Angeles
-  type: ss
-  server: 54.244.78.72
-  port: '443'
-  cipher: aes-256-cfb
-  password: amazonskr05
-  udp: true
 proxy-groups:
 - name: 🔮 选择节点
   type: select
   proxies:
   - 🚀 自动选择
   - 🔀 负载均衡
-  - TW, Taipei
-  - KR, Incheon
-  - US, Dallas 2
-  - HK, New Territories
-  - HK, Kowloon
-  - CA, Vancouver
-  - JP, Tokyo
   - US, Houston
-  - JP, Tokyo 2
-  - JP, Osaka
+  - US, Dallas 2
+  - CA, Vancouver
   - SG, Singapore
+  - HK, Kowloon
+  - JP, Tokyo
+  - KR, Incheon
+  - JP, Osaka
+  - TW, Taipei
+  - JP, Tokyo 2
   - HK, Los Angeles
+  - HK, New Territories
 - name: 🚀 自动选择
   type: url-test
   url: http://www.gstatic.com/generate_204
   interval: 300
   tolerance: 50
   proxies:
-  - TW, Taipei
-  - KR, Incheon
-  - US, Dallas 2
-  - HK, New Territories
-  - HK, Kowloon
-  - CA, Vancouver
-  - JP, Tokyo
   - US, Houston
-  - JP, Tokyo 2
-  - JP, Osaka
+  - US, Dallas 2
+  - CA, Vancouver
   - SG, Singapore
+  - HK, Kowloon
+  - JP, Tokyo
+  - KR, Incheon
+  - JP, Osaka
+  - TW, Taipei
+  - JP, Tokyo 2
   - HK, Los Angeles
+  - HK, New Territories
 - name: 🔀 负载均衡
   type: load-balance
   url: http://www.gstatic.com/generate_204
   interval: 300
   proxies:
-  - TW, Taipei
-  - KR, Incheon
-  - US, Dallas 2
-  - HK, New Territories
-  - HK, Kowloon
-  - CA, Vancouver
-  - JP, Tokyo
   - US, Houston
-  - JP, Tokyo 2
-  - JP, Osaka
+  - US, Dallas 2
+  - CA, Vancouver
   - SG, Singapore
+  - HK, Kowloon
+  - JP, Tokyo
+  - KR, Incheon
+  - JP, Osaka
+  - TW, Taipei
+  - JP, Tokyo 2
   - HK, Los Angeles
+  - HK, New Territories
 rules:
 - GEOIP,CN,DIRECT
 - DOMAIN-SUFFIX,google.com,🚀 自动选择
 - DOMAIN-SUFFIX,youtube.com,🔀 负载均衡
-- MATCH,选择节点
+- MATCH,🔮 选择节点
