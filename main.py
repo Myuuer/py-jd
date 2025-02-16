@@ -6,7 +6,7 @@ import pyaes
 import binascii
 from datetime import datetime
 import os
-import yaml  # 新增PyYAML库
+import yaml
 
 # 控制台输出（保持原有样式）
 print("      H͜͡E͜͡L͜͡L͜͡O͜͡ ͜͡W͜͡O͜͡R͜͡L͜͡D͜͡ ͜͡E͜͡X͜͡T͜͡R͜͡A͜͡C͜͡T͜͡ ͜͡S͜͡S͜͡ ͜͡N͜͡O͜͡D͜͡E͜͡")
@@ -88,7 +88,6 @@ try:
                 'udp': True
             } for server in servers
         ],
-        # 新增策略组配置 ################################
         'proxy-groups': [
             {
                 'name': '🔮 选择节点',
@@ -101,30 +100,26 @@ try:
                 'url': 'http://www.gstatic.com/generate_204',
                 'interval': 300,
                 'tolerance': 50,
-                'proxies': [server['title'] for server in servers]  # 自动包含所有节点
+                'proxies': [server['title'] for server in servers]
             },
             {
                 'name': '🔀 负载均衡',
                 'type': 'load-balance',
                 'url': 'http://www.gstatic.com/generate_204',
                 'interval': 300,
-                'proxies': [server['title'] for server in servers]  # 包含所有节点
+                'proxies': [server['title'] for server in servers]
             }
         ],
-        # 更新规则配置 ################################
         'rules': [
             'GEOIP,CN,DIRECT',
-            'DOMAIN-SUFFIX,google.com,🚀 自动选择',  # 指定 Google 走自动选择
-            'DOMAIN-SUFFIX,youtube.com,🔀 负载均衡', # 视频走负载均衡
-            'MATCH,🔮 选择节点'  # 默认规则
+            'DOMAIN-SUFFIX,google.com,🚀 自动选择',
+            'DOMAIN-SUFFIX,youtube.com,🔀 负载均衡',
+            'MATCH,🔮 选择节点'
         ]
     }
 
-    # 生成YAML
+    # 生成YAML（不写入本地文件）
     yaml_content = yaml.dump(clash_config, allow_unicode=True, sort_keys=False)
-    with open('clash.yaml', 'w', encoding='utf-8') as f:
-        f.write(yaml_content)
-    print("本地文件 clash.yaml 生成成功")
 
     # 更新到Gist
     GIST_ID = os.environ.get('GIST_LINK')
