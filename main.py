@@ -75,12 +75,15 @@ try:
     decrypted_data = aes_decrypt(encrypted_data, AES_KEY, AES_IV)
     servers = json.loads(decrypted_data)['data']
 
-    # 生成SS节点链接
+    # 生成SS节点链接（严格格式：ss://{Base64字符串}#备注）
     ss_links = []
     for server in servers:
-        ss_url = f"aes-256-cfb:{server['password']}@{server['ip']}:{server['port']}"
-        b64_ss = base64.b64encode(ss_url.encode()).decode()
-        ss_links.append(f"ss://{b64_ss}#{server['title']}")
+        # 构建URI格式：method:password@ip:port
+        ss_uri = f"{server['cipher']}:{server['password']}@{server['ip']}:{server['port']}"
+        # Base64编码并拼接为ss链接
+        b64_ss = base64.urlsafe_b64encode(ss_uri.encode()).decode().rstrip('=')
+        ss_link = f"ss://{b64_ss}#{server['title']}"
+        ss_links.append(ss_link)
 
     # 构建Clash配置
     clash_config = {
@@ -90,7 +93,7 @@ try:
                 'type': 'ss',
                 'server': server['ip'],
                 'port': server['port'],
-                'cipher': 'aes-256-cfb',
+                'cipher': server['cipher'],
                 'password': server['password'],
                 'udp': True
             } for server in servers
@@ -101,7 +104,21 @@ try:
                 'type': 'select',
                 'proxies': ['🚀 自动选择', '🔀 负载均衡'] + [server['title'] for server in servers]
             },
-            # ...（保持原有proxy-groups配置）
+            {
+                'name': '🚀 自动选择',
+                'type': 'url-test',
+                'url': 'http://www.gstatic.com/generate_204',
+                'interval': 300,
+                'tolerance': 50,
+                'proxies': [server['title'] for server in servers]
+            },
+            {
+                'name': '🔀 负载均衡',
+                'type': 'load-balance',
+                'url': 'http://www.gstatic.com/generate_204',
+                'interval': 300,
+                'proxies': [server['title'] for server in servers]
+            }
         ],
         'rules': [
             'GEOIP,CN,DIRECT',
@@ -113,7 +130,7 @@ try:
 
     # 生成文件内容
     files_content = {
-        "clash.yaml": {"content": yaml.dump(clash_config, allow_unicode=True)},
+        "clash.yaml": {"content": yaml.dump(clash_config, allow_unicode=True, sort_keys=False)},
         "ss_links.txt": {"content": "\n".join(ss_links)}
     }
 
