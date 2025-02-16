@@ -8,12 +8,12 @@ from datetime import datetime
 import os
 import yaml
 
-# 控制台输出（保持原有样式）
+# 控制台艺术字输出
 print("      H͜͡E͜͡L͜͡L͜͡O͜͡ ͜͡W͜͡O͜͡R͜͡L͜͡D͜͡ ͜͡E͜͡X͜͡T͜͡R͜͡A͜͡C͜͡T͜͡ ͜͡S͜͡S͜͡ ͜͡N͜͡O͜͡D͜͡E͜͡")
 print("𓆝 𓆟 𓆞 𓆟 𓆝 𓆟 𓆞 𓆟 𓆝 𓆟 𓆞 𓆟")
 print("Author : 𝐼𝑢")
 print(f"Date   : {datetime.today().strftime('%Y-%m-%d')}")
-print("Version: 1.0")
+print("Version: 2.0")
 print("𓆝 𓆟 𓆞 𓆟 𓆝 𓆟 𓆞 𓆟 𓆝 𓆟 𓆞 𓆟")
 print("𝐼𝑢:")
 print(r"""
@@ -34,7 +34,7 @@ print(r"""
 ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠑⢒⠁⠀⠀⠀⠀⠀⠀⠀
 """)
 
-# API请求配置（保持原有参数）
+# API配置常量
 API_URL = 'http://api.skrapp.net/api/serverlist'
 HEADERS = {
     'accept': '/',
@@ -48,64 +48,33 @@ PAYLOAD = {'data': '4265a9c353cd8624fd2bc7b5d75d2f18b1b5e66ccd37e2dfa628bcb8f73d
 AES_KEY = b'65151f8d966bf596'
 AES_IV = b'88ca0f0ea1ecf975'
 
-# AES解密函数（保持原有逻辑）
-def aes_decrypt(ciphertext, key, iv):
-    aes = pyaes.AESModeOfOperationCBC(key, iv=iv)
-    decrypted = b''.join(aes.decrypt(ciphertext[i:i+16]) for i in range(0, len(ciphertext), 16))
-    padding_length = decrypted[-1]
-    return decrypted[:-padding_length]
+def aes_decrypt(ciphertext: bytes, key: bytes, iv: bytes) -> bytes:
+    """AES-CBC解密并去除填充"""
+    try:
+        aes = pyaes.AESModeOfOperationCBC(key, iv=iv)
+        decrypted = b''.join(aes.decrypt(ciphertext[i:i+16]) for i in range(0, len(ciphertext), 16))
+        padding_length = decrypted[-1]
+        return decrypted[:-padding_length]
+    except Exception as e:
+        raise ValueError(f"AES解密失败: {str(e)}")
 
-# Gist更新函数（支持多文件）
-def update_gist(files_content, gist_id, pat):
-    url = f"https://api.github.com/gists/{gist_id}"
-    headers = {"Authorization": f"token {pat}", "Accept": "application/vnd.github.v3+json"}
-    data = {"files": files_content}
-    response = requests.patch(url, headers=headers, json=data)
-    return response.status_code == 200
-
-# 主逻辑
-try:
-    # 请求API并解密数据
-    response = requests.post(API_URL, headers=HEADERS, data=PAYLOAD)
-    if response.status_code != 200:
-        print(f"API请求失败，状态码：{response.status_code}")
-        exit(1)
-
-    encrypted_data = binascii.unhexlify(response.text.strip())
-    decrypted_data = aes_decrypt(encrypted_data, AES_KEY, AES_IV)
-    servers = json.loads(decrypted_data)['data']
-
-    # 生成SS节点链接（修复双重编码问题）
-    ss_links = []
-    for server in servers:
-        # 构建URI部分：加密方法:密码@IP:端口
-        ss_uri = f"aes-256-cfb:{server['password']}@{server['ip']}:{server['port']}"
-        # Base64编码（URL安全 + 移除填充）
-        b64_ss = base64.urlsafe_b64encode(ss_uri.encode()).decode().rstrip('=')
-        # 处理备注中的空格
-        remark = server['title'].strip().replace(' ', '_')
-        # 拼接完整SS链接
-        ss_link = f"ss://{b64_ss}#{remark}"
-        ss_links.append(ss_link)
-
-    # 构建Clash配置
-    clash_config = {
-        'proxies': [
-            {
-                'name': server['title'],
-                'type': 'ss',
-                'server': server['ip'],
-                'port': server['port'],
-                'cipher': 'aes-256-cfb',  # 固定加密方法
-                'password': server['password'],
-                'udp': True
-            } for server in servers
-        ],
+def generate_clash_config(servers: list) -> str:
+    """生成Clash配置文件"""
+    config = {
+        'proxies': [{
+            'name': s['title'],
+            'type': 'ss',
+            'server': s['ip'],
+            'port': s['port'],
+            'cipher': 'aes-256-cfb',
+            'password': s['password'],
+            'udp': True
+        } for s in servers],
         'proxy-groups': [
             {
                 'name': '🔮 选择节点',
                 'type': 'select',
-                'proxies': ['🚀 自动选择', '🔀 负载均衡'] + [server['title'] for server in servers]
+                'proxies': ['🚀 自动选择', '🔀 负载均衡'] + [s['title'] for s in servers]
             },
             {
                 'name': '🚀 自动选择',
@@ -113,14 +82,14 @@ try:
                 'url': 'http://www.gstatic.com/generate_204',
                 'interval': 300,
                 'tolerance': 50,
-                'proxies': [server['title'] for server in servers]
+                'proxies': [s['title'] for s in servers]
             },
             {
                 'name': '🔀 负载均衡',
                 'type': 'load-balance',
                 'url': 'http://www.gstatic.com/generate_204',
                 'interval': 300,
-                'proxies': [server['title'] for server in servers]
+                'proxies': [s['title'] for s in servers]
             }
         ],
         'rules': [
@@ -130,26 +99,73 @@ try:
             'MATCH,🔮 选择节点'
         ]
     }
+    return yaml.dump(config, allow_unicode=True, sort_keys=False)
 
-    # 生成文件内容
-    files_content = {
-        "clash.yaml": {"content": yaml.dump(clash_config, allow_unicode=True, sort_keys=False)},
-        "ss_links.txt": {"content": "\n".join(ss_links)}
-    }
+def generate_ss_links(servers: list) -> str:
+    """生成SS节点文本"""
+    links = []
+    for s in servers:
+        proxy_str = f"aes-256-cfb:{s['password']}@{s['ip']}:{s['port']}"
+        b64_str = base64.b64encode(proxy_str.encode()).decode()
+        links.append(f"ss://{b64_str}#{s['title']}")
+    return "\n".join(links)
 
-    # 更新到Gist
-    GIST_ID = os.environ.get('GIST_ID')
-    GIST_PAT = os.environ.get('GIST_PAT')
-    if GIST_ID and GIST_PAT:
-        if update_gist(files_content, GIST_ID, GIST_PAT):
-            print("Gist更新成功，已生成以下文件：")
-            print("- clash.yaml（Clash配置文件）")
-            print("- ss_links.txt（SS节点列表）")
+def update_gist(clash_content: str, ss_content: str, gist_id: str, pat: str) -> bool:
+    """更新Gist文件"""
+    try:
+        url = f"https://api.github.com/gists/{gist_id}"
+        headers = {
+            "Authorization": f"token {pat}",
+            "Accept": "application/vnd.github.v3+json"
+        }
+        data = {
+            "files": {
+                "clash.yaml": {"content": clash_content},
+                "ss-nodes.txt": {"content": ss_content}
+            }
+        }
+        response = requests.patch(url, headers=headers, json=data)
+        response.raise_for_status()
+        return True
+    except requests.exceptions.RequestException as e:
+        print(f"Gist更新失败: {str(e)}")
+        return False
+
+def main():
+    try:
+        # 获取API数据
+        response = requests.post(API_URL, headers=HEADERS, data=PAYLOAD)
+        response.raise_for_status()
+
+        # 解密处理
+        encrypted_data = binascii.unhexlify(response.text.strip())
+        decrypted_data = aes_decrypt(encrypted_data, AES_KEY, AES_IV)
+        servers = json.loads(decrypted_data)['data']
+
+        # 生成配置文件
+        clash_config = generate_clash_config(servers)
+        ss_config = generate_ss_links(servers)
+
+        # 更新Gist
+        gist_id = os.environ.get('GIST_LINK')
+        gist_pat = os.environ.get('GIST_PAT')
+        if gist_id and gist_pat:
+            if update_gist(clash_config, ss_config, gist_id, gist_pat):
+                print("🎉 配置更新成功")
+            else:
+                print("❌ Gist更新失败")
         else:
-            print("Gist更新失败")
-    else:
-        print("未配置GIST_ID或GIST_PAT，跳过Gist更新")
+            print("⚠️ 未配置GIST环境变量，跳过更新")
 
-except Exception as e:
-    print(f"程序运行出错：{str(e)}")
-    exit(1)
+    except json.JSONDecodeError:
+        print("❌ JSON解析失败，请检查数据格式")
+        exit(1)
+    except requests.exceptions.RequestException as e:
+        print(f"❌ 网络请求失败: {str(e)}")
+        exit(1)
+    except Exception as e:
+        print(f"❌ 发生未预期错误: {str(e)}")
+        exit(1)
+
+if __name__ == "__main__":
+    main()
