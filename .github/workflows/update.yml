@@ -1,4 +1,4 @@
-# .github/workflows/update.yml（保持不变）
+# .github/workflows/update.yml
 name: Update Configurations
 on:
   schedule:
