@@ -75,12 +75,11 @@ try:
     decrypted_data = aes_decrypt(encrypted_data, AES_KEY, AES_IV)
     servers = json.loads(decrypted_data)['data']
 
-    # 生成SS节点链接（严格格式：ss://{Base64字符串}#备注）
+    # 生成SS节点链接（修复加密方法硬编码）
     ss_links = []
     for server in servers:
-        # 构建URI格式：method:password@ip:port
-        ss_uri = f"{server['cipher']}:{server['password']}@{server['ip']}:{server['port']}"
-        # Base64编码并拼接为ss链接
+        # 使用固定加密方法（与源代码一致）
+        ss_uri = f"aes-256-cfb:{server['password']}@{server['ip']}:{server['port']}"
         b64_ss = base64.urlsafe_b64encode(ss_uri.encode()).decode().rstrip('=')
         ss_link = f"ss://{b64_ss}#{server['title']}"
         ss_links.append(ss_link)
@@ -93,7 +92,7 @@ try:
                 'type': 'ss',
                 'server': server['ip'],
                 'port': server['port'],
-                'cipher': server['cipher'],
+                'cipher': 'aes-256-cfb',  # 固定加密方法
                 'password': server['password'],
                 'udp': True
             } for server in servers
