@@ -1,14 +1,14 @@
 name: Update Clash Config
 on:
   schedule:
-    - cron: '0 0 * * *' # 每天00：00运行一次
+    - cron: '0 0 * * *'  # 每天00:00运行一次
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 关键权限配置
+      contents: write  # 权限保留（若未来需要其他提交操作）
 
     steps:
       - uses: actions/checkout@v3
@@ -30,10 +30,11 @@ jobs:
           GIST_PAT: ${{ secrets.GIST_PAT }}
         run: python main.py
 
-      - name: Commit and push if changed
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add clash.yaml
-          git commit -m "Update clash.yaml" || exit 0
-          git push "https://${{ github.actor}}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+      # 移除以下不再需要的提交步骤
+      # - name: Commit and push if changed
+      #   run: |
+      #     git config --global user.name "GitHub Actions"
+      #     git config --global user.email "actions@github.com"
+      #     git add clash.yaml
+      #     git commit -m "Update clash.yaml" || exit 0
+      #     git push "https://${{ github.actor}}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
