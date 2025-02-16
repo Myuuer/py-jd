@@ -75,13 +75,17 @@ try:
     decrypted_data = aes_decrypt(encrypted_data, AES_KEY, AES_IV)
     servers = json.loads(decrypted_data)['data']
 
-    # 生成SS节点链接（修复加密方法硬编码）
+    # 生成SS节点链接（修复双重编码问题）
     ss_links = []
     for server in servers:
-        # 使用固定加密方法（与源代码一致）
+        # 构建URI部分：加密方法:密码@IP:端口
         ss_uri = f"aes-256-cfb:{server['password']}@{server['ip']}:{server['port']}"
+        # Base64编码（URL安全 + 移除填充）
         b64_ss = base64.urlsafe_b64encode(ss_uri.encode()).decode().rstrip('=')
-        ss_link = f"ss://{b64_ss}#{server['title']}"
+        # 处理备注中的空格
+        remark = server['title'].strip().replace(' ', '_')
+        # 拼接完整SS链接
+        ss_link = f"ss://{b64_ss}#{remark}"
         ss_links.append(ss_link)
 
     # 构建Clash配置
