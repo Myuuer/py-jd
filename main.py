@@ -55,11 +55,11 @@ def aes_decrypt(ciphertext, key, iv):
     padding_length = decrypted[-1]
     return decrypted[:-padding_length]
 
-# Gist更新函数
-def update_gist(content, gist_id, pat):
+# Gist更新函数（支持多文件）
+def update_gist(files, gist_id, pat):
     url = f"https://api.github.com/gists/{gist_id}"
     headers = {"Authorization": f"token {pat}", "Accept": "application/vnd.github.v3+json"}
-    data = {"files": {"clash.yaml": {"content": content}}}
+    data = {"files": files}
     response = requests.patch(url, headers=headers, json=data)
     return response.status_code == 200
 
@@ -118,14 +118,33 @@ try:
         ]
     }
 
-    # 生成YAML（不写入本地文件）
+    # 生成Clash YAML
     yaml_content = yaml.dump(clash_config, allow_unicode=True, sort_keys=False)
+
+    # 生成SS订阅内容（Base64编码）
+    ss_uris = []
+    for server in servers:
+        method = 'aes-256-cfb'
+        password = server['password']
+        ip = server['ip']
+        port = server['port']
+        name = server['title']
+        uri_plain = f"{method}:{password}@{ip}:{port}"
+        uri_base64 = base64.urlsafe_b64encode(uri_plain.encode()).decode().rstrip('=')
+        ss_uri = f"ss://{uri_base64}#{name}"
+        ss_uris.append(ss_uri)
+    ss_content_plain = '\n'.join(ss_uris)
+    ss_content = base64.b64encode(ss_content_plain.encode()).decode()
 
     # 更新到Gist
     GIST_ID = os.environ.get('GIST_LINK')
     GIST_PAT = os.environ.get('GIST_PAT')
     if GIST_ID and GIST_PAT:
-        if update_gist(yaml_content, GIST_ID, GIST_PAT):
+        files = {
+            "clash.yaml": {"content": yaml_content},
+            "ss.txt": {"content": ss_content}
+        }
+        if update_gist(files, GIST_ID, GIST_PAT):
             print("Gist更新成功")
         else:
             print("Gist更新失败")
