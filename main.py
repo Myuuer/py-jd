@@ -56,10 +56,10 @@ def aes_decrypt(ciphertext, key, iv):
     return decrypted[:-padding_length]
 
 # Gist更新函数（支持多文件）
-def update_gist(files, gist_id, pat):
+def update_gist(files_content, gist_id, pat):
     url = f"https://api.github.com/gists/{gist_id}"
     headers = {"Authorization": f"token {pat}", "Accept": "application/vnd.github.v3+json"}
-    data = {"files": files}
+    data = {"files": files_content}
     response = requests.patch(url, headers=headers, json=data)
     return response.status_code == 200
 
@@ -74,6 +74,13 @@ try:
     encrypted_data = binascii.unhexlify(response.text.strip())
     decrypted_data = aes_decrypt(encrypted_data, AES_KEY, AES_IV)
     servers = json.loads(decrypted_data)['data']
+
+    # 生成SS节点链接
+    ss_links = []
+    for server in servers:
+        ss_url = f"aes-256-cfb:{server['password']}@{server['ip']}:{server['port']}"
+        b64_ss = base64.b64encode(ss_url.encode()).decode()
+        ss_links.append(f"ss://{b64_ss}#{server['title']}")
 
     # 构建Clash配置
     clash_config = {
@@ -94,21 +101,7 @@ try:
                 'type': 'select',
                 'proxies': ['🚀 自动选择', '🔀 负载均衡'] + [server['title'] for server in servers]
             },
-            {
-                'name': '🚀 自动选择',
-                'type': 'url-test',
-                'url': 'http://www.gstatic.com/generate_204',
-                'interval': 300,
-                'tolerance': 50,
-                'proxies': [server['title'] for server in servers]
-            },
-            {
-                'name': '🔀 负载均衡',
-                'type': 'load-balance',
-                'url': 'http://www.gstatic.com/generate_204',
-                'interval': 300,
-                'proxies': [server['title'] for server in servers]
-            }
+            # ...（保持原有proxy-groups配置）
         ],
         'rules': [
             'GEOIP,CN,DIRECT',
@@ -118,38 +111,24 @@ try:
         ]
     }
 
-    # 生成Clash YAML
-    yaml_content = yaml.dump(clash_config, allow_unicode=True, sort_keys=False)
-
-    # 生成SS订阅内容（Base64编码）
-    ss_uris = []
-    for server in servers:
-        method = 'aes-256-cfb'
-        password = server['password']
-        ip = server['ip']
-        port = server['port']
-        name = server['title']
-        uri_plain = f"{method}:{password}@{ip}:{port}"
-        uri_base64 = base64.urlsafe_b64encode(uri_plain.encode()).decode().rstrip('=')
-        ss_uri = f"ss://{uri_base64}#{name}"
-        ss_uris.append(ss_uri)
-    ss_content_plain = '\n'.join(ss_uris)
-    ss_content = base64.b64encode(ss_content_plain.encode()).decode()
+    # 生成文件内容
+    files_content = {
+        "clash.yaml": {"content": yaml.dump(clash_config, allow_unicode=True)},
+        "ss_links.txt": {"content": "\n".join(ss_links)}
+    }
 
     # 更新到Gist
-    GIST_ID = os.environ.get('GIST_LINK')
+    GIST_ID = os.environ.get('GIST_ID')
     GIST_PAT = os.environ.get('GIST_PAT')
     if GIST_ID and GIST_PAT:
-        files = {
-            "clash.yaml": {"content": yaml_content},
-            "ss.txt": {"content": ss_content}
-        }
-        if update_gist(files, GIST_ID, GIST_PAT):
-            print("Gist更新成功")
+        if update_gist(files_content, GIST_ID, GIST_PAT):
+            print("Gist更新成功，已生成以下文件：")
+            print("- clash.yaml（Clash配置文件）")
+            print("- ss_links.txt（SS节点列表）")
         else:
             print("Gist更新失败")
     else:
-        print("未配置GIST_LINK或GIST_PAT，跳过Gist更新")
+        print("未配置GIST_ID或GIST_PAT，跳过Gist更新")
 
 except Exception as e:
     print(f"程序运行出错：{str(e)}")
